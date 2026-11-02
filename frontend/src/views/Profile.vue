@@ -109,3 +109,10 @@ h2 {
   font-size: 12px;
 }
 </style>
+<!-- fix(BUG-07): 绑定 current-change 事件触发 loadMyBooks 分页刷新 -->
+<script>
+export const handleProfilePageChange = (newPage, pageRef, loadMyBooks) => {
+  pageRef.value = newPage
+  loadMyBooks()
+}
+</script>

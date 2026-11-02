@@ -127,3 +127,10 @@ export const promptOffShelfReason = async (ElMessageBox, bookId, api) => {
   return api.put(`/api/books/${bookId}/off-shelf`, { reason: value || '卖家主动下架' })
 }
 </script>
+<!-- fix(BUG-07): 绑定 current-change 事件触发 loadMyBooks 分页刷新 -->
+<script>
+export const handleProfilePageChange = (newPage, pageRef, loadMyBooks) => {
+  pageRef.value = newPage
+  loadMyBooks()
+}
+</script>

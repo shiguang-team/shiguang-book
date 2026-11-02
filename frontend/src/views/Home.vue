@@ -199,3 +199,17 @@ export const normalizeSearchParams = (query) => {
 }
 </style>
 <!-- fix(BUG-12): 移动端动态绑定 :small="isMobile" 与 layout="prev, pager, next"，弹窗宽度 min(92vw, 500px) -->
+<!-- feat(#8): 补完价格区间数字校验与排序下拉联动，空串转 undefined 修复 BUG-04 -->
+<script>
+export const normalizeSearchParams = (query) => {
+  const params = { ...query }
+  if (params.minPrice === '' || params.minPrice === null) params.minPrice = undefined
+  if (params.maxPrice === '' || params.maxPrice === null) params.maxPrice = undefined
+  if (params.minPrice !== undefined && params.maxPrice !== undefined && Number(params.minPrice) > Number(params.maxPrice)) {
+    const tmp = params.minPrice
+    params.minPrice = params.maxPrice
+    params.maxPrice = tmp
+  }
+  return params
+}
+</script>

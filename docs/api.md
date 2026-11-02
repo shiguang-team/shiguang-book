@@ -139,3 +139,21 @@
 
 ### 7.4 退出登录与 Token 黑名单 (#29)
 - `POST /api/auth/logout`：将当前 Bearer Token 加入服务端内存黑名单并即刻失效
+
+## 七、Sprint 7 新增接口契约（2026-11-02 冻结）
+
+### 7.1 收藏模块 (#26)
+- `POST /api/favorites/{bookId}`：添加收藏（幂等，重复收藏返回 200）
+- `DELETE /api/favorites/{bookId}`：取消收藏
+- `GET /api/favorites`：获取当前用户收藏列表（含书籍状态 `ON_SHELF` / `OFF_SHELF` / `DELETED`）
+
+### 7.2 留言未读统计 (#27)
+- `GET /api/messages/unread-count`：返回 `{ "code": 200, "data": { "unreadCount": 3 } }`
+- `PUT /api/messages/read-all`：将当前用户收到的未读留言批量标记为已读
+
+### 7.3 书籍下架原因与恢复 (#30)
+- `PUT /api/books/{id}/off-shelf`：请求体 `{ "reason": "教材已线下出给室友" }`
+- `PUT /api/books/{id}/restore`：重新上架恢复
+
+### 7.4 退出登录与 Token 黑名单 (#29)
+- `POST /api/auth/logout`：将当前 Bearer Token 加入服务端内存黑名单并即刻失效

@@ -33,5 +33,3 @@ public class FavoriteService {
         return new ArrayList<>();
     }
 }
-// fix(BUG-10): 捕获 DuplicateKeyException 作幂等返回，修复快速连点收藏按钮触发唯一索引冲突返回 500 的问题
-// fix(BUG-13): 卖家逻辑删除书籍后 selectBatchIds 判空兜底，标记 status = 'DELETED' 并返回【该书籍已被卖家删除】

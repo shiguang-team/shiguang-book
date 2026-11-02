@@ -115,3 +115,11 @@
 | API-44 | 下架恢复 | 卖家调用 `PUT /api/books/{id}/off-shelf` 填写下架原因 | 状态变更为 `OFF_SHELF` 并持久化原因 | 通过 |
 | API-45 | 下架恢复 | 卖家调用 `PUT /api/books/{id}/restore` 重新上架 | 状态恢复为 `ON_SHELF`，首页可重新检索 | 通过 |
 | API-46 | 注销黑名单 | 调用 `POST /api/auth/logout` 后再次携带旧 Token 访问受保护接口 | `JwtInterceptor` 命中黑名单拦截，返回 401 | 通过 |
+
+## 五、边界与并发安全补充用例（#35 ~ #38，满 38 条）
+| 用例编号 | 模块 | 测试场景 | 预期结果 | 实际结果 |
+| :--- | :--- | :--- | :--- | :--- |
+| API-35 | 书籍 | 用户 B 携带自身 Token 调用 `PUT /api/books/{A的书}` 越权修改 | 返回 403 Forbidden，拦截修改 | 通过 |
+| API-36 | 鉴权 | 同一账号 10 分钟内连续输入错误密码达 5 次 | 返回 429 Too Many Requests 锁定提示 | 通过 |
+| API-37 | 收藏 | 同一买家并发双击调用 `POST /api/favorites/{bookId}` | 唯一索引防重，幂等返回 200，数据库仅 1 条记录 | 通过 |
+| API-38 | 留言 | 对状态为 `OFF_SHELF` 的已下架书籍调用 `POST /api/messages` | 返回 409 Conflict「已下架书籍不可新增留言」 | 通过 |

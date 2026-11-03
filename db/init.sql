@@ -86,3 +86,7 @@ ALTER TABLE book ADD COLUMN IF NOT EXISTS off_shelf_reason VARCHAR(255) DEFAULT 
 
 -- Sprint 7 (#22): 合并单列索引为联合索引，消除 Using filesort，5,000 条数据查询从 68ms 降至 4ms
 CREATE INDEX idx_del_status_cat_created ON book (deleted, status, category, created_at DESC);
+
+-- Sprint 7 (#27): 启用 message.is_read 字段并补充 receiver_id + is_read 联合索引
+ALTER TABLE message ADD COLUMN IF NOT EXISTS is_read TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已读：0未读 1已读';
+CREATE INDEX idx_receiver_read ON message (receiver_id, is_read);

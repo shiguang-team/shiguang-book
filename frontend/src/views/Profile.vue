@@ -152,3 +152,14 @@ export const handleProfilePageChange = (newPage, pageRef, loadMyBooks) => {
   loadMyBooks()
 }
 </script>
+<!-- feat(#9): 补齐编辑跳转（/publish?id=xxx）与下架原因输入弹窗（ElMessageBox.prompt） -->
+<script>
+export const promptOffShelfReason = async (ElMessageBox, bookId, api) => {
+  const { value } = await ElMessageBox.prompt('请输入下架原因（选填）', '下架确认', {
+    confirmButtonText: '确认下架',
+    cancelButtonText: '取消',
+    inputPlaceholder: '例如：已线下交易完成'
+  })
+  return api.put(`/api/books/${bookId}/off-shelf`, { reason: value || '卖家主动下架' })
+}
+</script>

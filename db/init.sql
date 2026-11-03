@@ -76,3 +76,7 @@ CREATE TABLE `login_attempt` (
     PRIMARY KEY (`id`),
     KEY `idx_phone_time` (`phone`, `created_at`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='登录失败记录（5 次锁 10 分钟）';
+
+-- Sprint 7 (#27): 启用 message.is_read 字段并补充 receiver_id + is_read 联合索引
+ALTER TABLE message ADD COLUMN IF NOT EXISTS is_read TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已读：0未读 1已读';
+CREATE INDEX idx_receiver_read ON message (receiver_id, is_read);

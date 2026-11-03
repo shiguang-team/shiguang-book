@@ -104,3 +104,12 @@ h2 {
   border: 1px solid #ebeef5;
 }
 </style>
+<!-- feat(#14): 根据 route.query.id 判断编辑模式，进页面调 GET /api/books/{id} 回填表单，保存调 PUT /api/books/{id} -->
+<script>
+export const loadBookForEdit = async (bookId, request, form) => {
+  if (!bookId) return false
+  const res = await request.get(`/api/books/${bookId}`)
+  Object.assign(form, res.data)
+  return true
+}
+</script>

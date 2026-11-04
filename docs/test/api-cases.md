@@ -123,3 +123,15 @@
 | API-36 | 鉴权 | 同一账号 10 分钟内连续输入错误密码达 5 次 | 返回 429 Too Many Requests 锁定提示 | 通过 |
 | API-37 | 收藏 | 同一买家并发双击调用 `POST /api/favorites/{bookId}` | 唯一索引防重，幂等返回 200，数据库仅 1 条记录 | 通过 |
 | API-38 | 留言 | 对状态为 `OFF_SHELF` 的已下架书籍调用 `POST /api/messages` | 返回 409 Conflict「已下架书籍不可新增留言」 | 通过 |
+
+## 六、Sprint 7 新增模块接口用例（#39 ~ #46，累计 46 条全绿）
+| 用例编号 | 模块 | 测试场景 | 预期结果 | 实际结果 |
+| :--- | :--- | :--- | :--- | :--- |
+| API-39 | 收藏 | 登录买家调用 `POST /api/favorites/{bookId}` 添加收藏 | 返回 200，详情接口 `favorited=true` | 通过 |
+| API-40 | 收藏 | 登录买家调用 `DELETE /api/favorites/{bookId}` 取消收藏 | 返回 200，详情接口 `favorited=false` | 通过 |
+| API-41 | 收藏 | 调用 `GET /api/favorites` 查询收藏列表（含已下架/已删除书籍） | 正常返回列表并标记对应状态，无 500 报错 | 通过 |
+| API-42 | 未读数 | 买家新增留言后，卖家调用 `GET /api/messages/unread-count` | `unreadCount` 计数 +1 | 通过 |
+| API-43 | 未读数 | 卖家调用 `PUT /api/messages/read-all` 批量已读 | 返回 200，再次查询 `unreadCount` 为 0 | 通过 |
+| API-44 | 下架恢复 | 卖家调用 `PUT /api/books/{id}/off-shelf` 填写下架原因 | 状态变更为 `OFF_SHELF` 并持久化原因 | 通过 |
+| API-45 | 下架恢复 | 卖家调用 `PUT /api/books/{id}/restore` 重新上架 | 状态恢复为 `ON_SHELF`，首页可重新检索 | 通过 |
+| API-46 | 注销黑名单 | 调用 `POST /api/auth/logout` 后再次携带旧 Token 访问受保护接口 | `JwtInterceptor` 命中黑名单拦截，返回 401 | 通过 |

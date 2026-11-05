@@ -213,3 +213,11 @@ export const normalizeSearchParams = (query) => {
   return params
 }
 </script>
+<style scoped>
+@media (max-width: 414px) {
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 10px;
+  }
+}
+</style>

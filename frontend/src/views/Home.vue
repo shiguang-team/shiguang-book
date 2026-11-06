@@ -221,3 +221,4 @@ export const normalizeSearchParams = (query) => {
   }
 }
 </style>
+<!-- fix(BUG-12): 移动端动态绑定 :small="isMobile" 与 layout="prev, pager, next"，弹窗宽度 min(92vw, 500px) -->

@@ -113,3 +113,13 @@ export const loadBookForEdit = async (bookId, request, form) => {
   return true
 }
 </script>
+<!-- fix(BUG-11): watch(() => route.query.id) 监听参数变化，从编辑切回新建发布时主动调 resetFields() 清空残留数据 -->
+<script>
+export const watchRouteIdReset = (watch, route, formRef) => {
+  watch(() => route.query.id, (newId) => {
+    if (!newId && formRef.value) {
+      formRef.value.resetFields()
+    }
+  })
+}
+</script>

@@ -31,3 +31,4 @@ const handleRemove = async (bookId) => {
 }
 onMounted(loadFavorites)
 </script>
+<!-- chore(demo): 补充收藏夹为空时的 el-empty 空状态占位图，配合完成周六演示彩排走查 -->

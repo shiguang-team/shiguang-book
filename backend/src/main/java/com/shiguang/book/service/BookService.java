@@ -29,7 +29,7 @@ public class BookService {
     private final BookMapper bookMapper;
     private final UserMapper userMapper;
 
-    /** 首页 / 搜索：分页 + 可选条件，条件为空绝不能传空串（BUG-04 的根因） */
+    /** 首页列表 / 多条件分页检索 */
     public Page<Book> page(BookQuery q) {
         LambdaQueryWrapper<Book> w = new LambdaQueryWrapper<>();
         if (q.getOnlyOnSale() == null || q.getOnlyOnSale() == 1) {
@@ -51,6 +51,7 @@ public class BookService {
         switch (q.getSort() == null ? "newest" : q.getSort()) {
             case "priceAsc" -> w.orderByAsc(Book::getPrice);
             case "priceDesc" -> w.orderByDesc(Book::getPrice);
+            case "conditionDesc" -> w.orderByDesc(Book::getConditionLevel).orderByDesc(Book::getCreatedAt);
             default -> w.orderByDesc(Book::getCreatedAt);
         }
 
@@ -90,10 +91,18 @@ public class BookService {
         return book;
     }
 
-    /** 上架 / 下架：0 下架 1 上架 */
-    public Book changeStatus(Long uid, Long id, Integer status) {
+    /** 上架 / 下架：0 下架（可附带原因） 1 上架（清空下架原因） */
+    public Book changeStatus(Long uid, Long id, Integer status, String reason) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BizException(400, "非法的书籍状态");
+        }
         Book book = mustOwn(uid, id);
         book.setStatus(status);
+        if (status == 0) {
+            book.setOffShelfReason(StringUtils.hasText(reason) ? reason.trim() : null);
+        } else {
+            book.setOffShelfReason(null);
+        }
         book.setUpdatedAt(LocalDateTime.now());
         bookMapper.updateById(book);
         return book;
@@ -133,7 +142,7 @@ public class BookService {
         book.setCover(dto.getCover());
     }
 
-    /** 一次性把卖家昵称/院系回填，避免前端为每条书再发一次请求 */
+    /** 批量回填卖家昵称/院系，避免 N+1 查询 */
     private void fillSeller(List<Book> books) {
         if (books == null || books.isEmpty()) {
             return;

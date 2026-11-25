@@ -35,7 +35,7 @@ public class UploadController {
     @Value("${shiguang.upload.dir}")
     private String uploadDir;
 
-    /** 封面图上传：限 2MB、只允许 jpg/jpeg/png/webp，文件名用 UUID 防重名（BUG-03 的教训） */
+    /** 封面图上传：限 2MB、只允许 jpg/jpeg/png/webp，文件名用 UUID 防重名 */
     @PostMapping
     public Result<Map<String, String>> upload(HttpServletRequest request,
                                               @RequestParam("file") MultipartFile file) {

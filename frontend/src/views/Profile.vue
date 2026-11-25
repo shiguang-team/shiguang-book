@@ -5,11 +5,11 @@
       <p class="sub">{{ user?.phone }} · {{ user?.dept }}</p>
     </el-card>
 
-    <el-tabs v-model="tab" class="tabs">
+    <el-tabs v-model="tab" class="tabs" @tab-change="onTabChange">
       <el-tab-pane label="我发布的书籍" name="books">
-        <el-table :data="myBooks" size="small">
-          <el-table-column prop="title" label="书名" min-width="180" />
-          <el-table-column prop="price" label="价格" width="90">
+        <el-table :data="pagedBooks" size="small">
+          <el-table-column prop="title" label="书名" min-width="160" />
+          <el-table-column prop="price" label="价格" width="80">
             <template #default="{ row }">¥{{ row.price }}</template>
           </el-table-column>
           <el-table-column label="状态" width="90">
@@ -19,8 +19,9 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="190">
+          <el-table-column label="操作" width="210">
             <template #default="{ row }">
+              <el-button link type="primary" @click="$router.push(`/publish?id=${row.id}`)">编辑</el-button>
               <el-button link type="primary" @click="toggle(row)">
                 {{ row.status === 1 ? '下架' : '重新上架' }}
               </el-button>
@@ -28,6 +29,16 @@
             </template>
           </el-table-column>
         </el-table>
+        <el-pagination
+          v-if="myBooks.length > pageSize"
+          background
+          small
+          layout="prev, pager, next"
+          :total="myBooks.length"
+          :page-size="pageSize"
+          v-model:current-page="bookPage"
+          class="pager"
+        />
       </el-tab-pane>
 
       <el-tab-pane label="我收到的留言" name="messages">
@@ -43,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../api'
 
@@ -51,16 +62,40 @@ const tab = ref('books')
 const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 const myBooks = ref([])
 const received = ref([])
+const bookPage = ref(1)
+const pageSize = 8
+
+const pagedBooks = computed(() => {
+  const start = (bookPage.value - 1) * pageSize
+  return myBooks.value.slice(start, start + pageSize)
+})
 
 async function load() {
   myBooks.value = await request.get('/books/mine')
   received.value = await request.get('/messages/received')
 }
 
+async function onTabChange(name) {
+  if (name === 'messages') {
+    await request.put('/messages/read-all')
+    window.dispatchEvent(new Event('unread-updated'))
+    received.value = await request.get('/messages/received')
+  }
+}
+
 async function toggle(row) {
-  const next = row.status === 1 ? 0 : 1
-  await request.put(`/books/${row.id}/status`, null, { params: { status: next } })
-  ElMessage.success(next === 1 ? '已重新上架' : '已下架')
+  if (row.status === 1) {
+    const { value } = await ElMessageBox.prompt('可填写下架原因（选填，将展示在书籍详情页）', '下架书籍', {
+      confirmButtonText: '确认下架',
+      cancelButtonText: '取消',
+      inputPlaceholder: '例如：已线下交易出清'
+    })
+    await request.put(`/books/${row.id}/status`, null, { params: { status: 0, reason: value || '' } })
+    ElMessage.success('已下架')
+  } else {
+    await request.put(`/books/${row.id}/status`, null, { params: { status: 1 } })
+    ElMessage.success('已重新上架')
+  }
   await load()
 }
 
@@ -88,6 +123,10 @@ h2 {
 }
 .tabs {
   margin-top: 16px;
+}
+.pager {
+  margin-top: 14px;
+  justify-content: center;
 }
 .msg {
   padding: 8px 0;

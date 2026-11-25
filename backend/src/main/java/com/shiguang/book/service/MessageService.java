@@ -1,6 +1,7 @@
 package com.shiguang.book.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.shiguang.book.common.BizException;
 import com.shiguang.book.dto.MessageDTO;
 import com.shiguang.book.entity.Book;
@@ -43,7 +44,6 @@ public class MessageService {
         if (book == null) {
             throw new BizException(404, "书籍不存在");
         }
-        // 场景测试三定的规则：已下架的书可以看，但不能再新增留言
         if (book.getStatus() != null && book.getStatus() == 0) {
             throw new BizException(409, "该书籍已下架，无法留言");
         }
@@ -83,6 +83,22 @@ public class MessageService {
                 .orderByDesc(Message::getCreatedAt));
         fillSender(list);
         return list;
+    }
+
+    /** 统计当前用户的未读留言数 */
+    public long unreadCount(Long uid) {
+        Long cnt = messageMapper.selectCount(new LambdaQueryWrapper<Message>()
+                .eq(Message::getReceiverId, uid)
+                .eq(Message::getIsRead, 0));
+        return cnt == null ? 0L : cnt;
+    }
+
+    /** 将当前用户收到的未读留言全部标为已读 */
+    public void markAllRead(Long uid) {
+        messageMapper.update(null, new LambdaUpdateWrapper<Message>()
+                .eq(Message::getReceiverId, uid)
+                .eq(Message::getIsRead, 0)
+                .set(Message::getIsRead, 1));
     }
 
     private void fillSender(List<Message> list) {

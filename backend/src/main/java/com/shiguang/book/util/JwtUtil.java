@@ -35,7 +35,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    /** 校验并解析，失败返回 null（由拦截器决定怎么处理） */
+    /** 校验并解析用户 ID，失败返回 null */
     public Long parse(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
@@ -46,6 +46,21 @@ public class JwtUtil {
             return Long.valueOf(claims.getSubject());
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /** 获取 token 的过期时间戳（毫秒），解析失败返回 0 */
+    public long getExpirationMillis(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            Date exp = claims.getExpiration();
+            return exp != null ? exp.getTime() : 0L;
+        } catch (Exception e) {
+            return 0L;
         }
     }
 }

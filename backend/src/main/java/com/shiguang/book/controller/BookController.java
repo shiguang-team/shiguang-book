@@ -35,7 +35,7 @@ public class BookController {
         return Result.ok(bookService.page(query));
     }
 
-    /** 书籍详情：无需登录，已下架的书也能看（场景测试三的规则） */
+    /** 书籍详情：无需登录，已下架书籍也可浏览 */
     @GetMapping("/{id}")
     public Result<Book> detail(@PathVariable Long id) {
         return Result.ok(bookService.detail(id));
@@ -63,8 +63,9 @@ public class BookController {
     @PutMapping("/{id}/status")
     public Result<Book> changeStatus(HttpServletRequest request,
                                      @PathVariable Long id,
-                                     @RequestParam Integer status) {
-        return Result.ok(bookService.changeStatus(CurrentUser.get(request), id, status));
+                                     @RequestParam Integer status,
+                                     @RequestParam(required = false) String reason) {
+        return Result.ok(bookService.changeStatus(CurrentUser.get(request), id, status, reason));
     }
 
     @DeleteMapping("/{id}")

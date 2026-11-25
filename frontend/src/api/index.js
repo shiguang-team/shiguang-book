@@ -3,7 +3,6 @@ import { ElMessage } from 'element-plus'
 
 const request = axios.create({ baseURL: '/api', timeout: 10000 })
 
-// 请求拦截：带上 token
 request.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -12,8 +11,6 @@ request.interceptors.request.use((config) => {
   return config
 })
 
-// 响应拦截：统一拆包 + 统一报错。
-// BUG-01 的教训：这里不要直接 push 路由，否则会和守卫互相触发形成死循环。
 request.interceptors.response.use(
   (resp) => {
     const body = resp.data

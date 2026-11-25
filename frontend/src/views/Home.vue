@@ -1,26 +1,29 @@
 <template>
   <div>
     <el-card shadow="never" class="filter">
-      <el-input
-        v-model="query.keyword"
-        placeholder="搜索书名或描述，如「数据结构」"
-        clearable
-        style="width: 280px"
-        @keyup.enter="reload"
-      />
-      <el-select v-model="query.category" placeholder="全部分类" clearable style="width: 130px" @change="reload">
-        <el-option v-for="c in categories" :key="c" :label="c" :value="c" />
-      </el-select>
-      <el-input-number v-model="query.minPrice" :min="0" :controls="false" placeholder="最低价" style="width: 100px" />
-      <span class="dash">-</span>
-      <el-input-number v-model="query.maxPrice" :min="0" :controls="false" placeholder="最高价" style="width: 100px" />
-      <el-select v-model="query.sort" style="width: 130px" @change="reload">
-        <el-option label="最新发布" value="newest" />
-        <el-option label="价格从低到高" value="priceAsc" />
-        <el-option label="价格从高到低" value="priceDesc" />
-      </el-select>
-      <el-button type="primary" @click="reload">搜索</el-button>
-      <el-button text @click="reset">重置</el-button>
+      <div class="filter-row">
+        <el-input
+          v-model="query.keyword"
+          placeholder="搜索书名或描述，如「数据结构」"
+          clearable
+          class="kw-input"
+          @keyup.enter="reload"
+        />
+        <el-select v-model="query.category" placeholder="全部分类" clearable style="width: 120px" @change="reload">
+          <el-option v-for="c in categories" :key="c" :label="c" :value="c" />
+        </el-select>
+        <el-input-number v-model="query.minPrice" :min="0" :controls="false" placeholder="最低价" style="width: 95px" />
+        <span class="dash">-</span>
+        <el-input-number v-model="query.maxPrice" :min="0" :controls="false" placeholder="最高价" style="width: 95px" />
+        <el-select v-model="query.sort" style="width: 135px" @change="reload">
+          <el-option label="最新发布" value="newest" />
+          <el-option label="价格从低到高" value="priceAsc" />
+          <el-option label="价格从高到低" value="priceDesc" />
+          <el-option label="成色从高到低" value="conditionDesc" />
+        </el-select>
+        <el-button type="primary" @click="reload">搜索</el-button>
+        <el-button text @click="reset">重置</el-button>
+      </div>
     </el-card>
 
     <el-empty v-if="!loading && list.length === 0" description="还没有符合条件的书，换个关键词试试" />
@@ -38,7 +41,7 @@
         </div>
         <div class="bottom">
           <span class="price">¥{{ b.price }}</span>
-          <span class="seller">{{ b.sellerNickname }} · {{ b.sellerDept }}</span>
+          <span class="seller">{{ b.sellerNickname }}</span>
         </div>
       </el-card>
     </div>
@@ -46,7 +49,8 @@
     <el-pagination
       v-if="total > 0"
       background
-      layout="prev, pager, next, total"
+      :small="isMobile"
+      :layout="isMobile ? 'prev, pager, next' : 'prev, pager, next, total'"
       :total="total"
       :page-size="query.size"
       :current-page="query.page"
@@ -57,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '../api'
 
@@ -66,13 +70,17 @@ const categories = ['教材', '考研', '课外', '其他']
 const list = ref([])
 const total = ref(0)
 const loading = ref(false)
+const isMobile = ref(window.innerWidth <= 640)
 const query = ref({ page: 1, size: 12, keyword: '', category: '', minPrice: null, maxPrice: null, sort: 'newest' })
+
+function handleResize() {
+  isMobile.value = window.innerWidth <= 640
+}
 
 async function load() {
   loading.value = true
   try {
     const params = { ...query.value }
-    // 空值不要传给后端，否则会变成「price = ''」这种脏条件（BUG-04）
     Object.keys(params).forEach((k) => {
       if (params[k] === '' || params[k] === null || params[k] === undefined) delete params[k]
     })
@@ -92,7 +100,7 @@ function reload() {
 function onPage(p) {
   query.value.page = p
   load()
-  window.scrollTo(0, 0) // BUG-02 的修复：翻页后回到顶部
+  window.scrollTo(0, 0)
 }
 
 function reset() {
@@ -104,16 +112,28 @@ function go(id) {
   router.push(`/book/${id}`)
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style scoped>
 .filter {
-  margin: 20px 0 16px;
+  margin: 16px 0;
+}
+.filter-row {
   display: flex;
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
+}
+.kw-input {
+  width: 260px;
 }
 .dash {
   color: #c0c4cc;
@@ -174,5 +194,14 @@ onMounted(load)
 .pager {
   margin: 24px 0;
   justify-content: center;
+}
+@media (max-width: 640px) {
+  .kw-input {
+    width: 100%;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(145px, 1fr));
+    gap: 10px;
+  }
 }
 </style>

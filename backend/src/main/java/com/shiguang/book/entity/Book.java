@@ -1,5 +1,6 @@
 package com.shiguang.book.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -36,6 +37,10 @@ public class Book {
 
     /** 1 在售 0 已下架 */
     private Integer status;
+
+    /** 下架原因 */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private String offShelfReason;
 
     @TableLogic
     private Integer deleted;

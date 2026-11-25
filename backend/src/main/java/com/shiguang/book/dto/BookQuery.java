@@ -14,7 +14,7 @@ public class BookQuery {
     private String category;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
-    /** newest / priceAsc / priceDesc */
+    /** newest / priceAsc / priceDesc / conditionDesc */
     private String sort = "newest";
     /** 1 只看在售（默认），0 全部 */
     private Integer onlyOnSale = 1;

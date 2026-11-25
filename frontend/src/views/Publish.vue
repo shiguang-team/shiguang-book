@@ -1,6 +1,6 @@
 <template>
   <el-card shadow="never" class="card">
-    <h2>发布书籍</h2>
+    <h2>{{ editId ? '编辑书籍' : '发布书籍' }}</h2>
     <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
       <el-form-item label="书名" prop="title">
         <el-input v-model="form.title" maxlength="60" show-word-limit placeholder="如：高等数学（第七版）" />
@@ -32,23 +32,37 @@
         <el-input v-model="form.description" type="textarea" :rows="4" maxlength="500" show-word-limit />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" :loading="loading" @click="submit">发布</el-button>
+        <el-button type="primary" :loading="loading" @click="submit">
+          {{ editId ? '保存修改' : '发布' }}
+        </el-button>
       </el-form-item>
     </el-form>
   </el-card>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '../api'
 
 const router = useRouter()
+const route = useRoute()
 const formRef = ref()
 const loading = ref(false)
 const categories = ['教材', '考研', '课外', '其他']
-const form = ref({ title: '', category: '教材', conditionLevel: 9, price: 10, description: '', cover: '' })
+
+const defaultForm = () => ({
+  title: '',
+  category: '教材',
+  conditionLevel: 9,
+  price: 10,
+  description: '',
+  cover: ''
+})
+
+const form = ref(defaultForm())
+const editId = computed(() => (route.query.id ? Number(route.query.id) : null))
 
 const rules = {
   title: [{ required: true, message: '请输入书名', trigger: 'blur' }],
@@ -56,9 +70,31 @@ const rules = {
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }]
 }
 
-// 手动上传：传完拿到 /files/xxx 的相对地址，存进表单
-// 注意：千万不要自己设 Content-Type，否则 multipart 的 boundary 会丢（BUG-03 / 联调时踩过）
+async function initByQuery() {
+  if (editId.value) {
+    const book = await request.get(`/books/${editId.value}`)
+    form.value = {
+      title: book.title || '',
+      category: book.category || '教材',
+      conditionLevel: book.conditionLevel || 9,
+      price: Number(book.price) || 10,
+      description: book.description || '',
+      cover: book.cover || ''
+    }
+  } else {
+    form.value = defaultForm()
+    formRef.value?.clearValidate()
+  }
+}
+
+watch(() => route.query.id, initByQuery)
+onMounted(initByQuery)
+
 function uploadCover(options) {
+  if (options.file.size > 2 * 1024 * 1024) {
+    ElMessage.warning('图片大小不能超过 2MB')
+    return
+  }
   const fd = new FormData()
   fd.append('file', options.file)
   request
@@ -74,9 +110,15 @@ async function submit() {
   await formRef.value.validate()
   loading.value = true
   try {
-    const book = await request.post('/books', form.value)
-    ElMessage.success('发布成功')
-    router.replace(`/book/${book.id}`)
+    if (editId.value) {
+      await request.put(`/books/${editId.value}`, form.value)
+      ElMessage.success('修改已保存')
+      router.replace(`/book/${editId.value}`)
+    } else {
+      const book = await request.post('/books', form.value)
+      ElMessage.success('发布成功')
+      router.replace(`/book/${book.id}`)
+    }
   } finally {
     loading.value = false
   }

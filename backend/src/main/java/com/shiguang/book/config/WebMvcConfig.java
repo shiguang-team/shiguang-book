@@ -27,7 +27,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/api/auth/**");
     }
 
-    /** 上传的图片通过 /files/** 访问（BUG-03/BUG-08 的教训：路径只在这里配置一次） */
+    /** 上传的图片通过 /files/** 访问 */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String abs = new File(uploadDir).getAbsolutePath();

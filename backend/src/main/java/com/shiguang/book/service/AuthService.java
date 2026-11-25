@@ -31,7 +31,7 @@ public class AuthService {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public Map<String, Object> register(RegisterDTO dto) {
-        // BUG-06：手机号必须先规范化，否则带空格会注册出两个「一样的」账号
+        // 手机号必须先规范化，否则带空格会注册出两个一样的账号
         String phone = dto.getPhone().trim();
         Long exists = userMapper.selectCount(
                 new LambdaQueryWrapper<User>().eq(User::getPhone, phone));

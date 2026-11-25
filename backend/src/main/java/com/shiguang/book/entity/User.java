@@ -14,7 +14,7 @@ public class User {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 手机号，唯一索引（BUG-06：入库前必须 trim） */
+    /** 手机号，唯一索引 */
     private String phone;
 
     /** BCrypt 加密后的密码，绝不返回给前端 */

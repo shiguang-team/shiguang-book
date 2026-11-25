@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Result<Void> handleOther(Exception e) {
-        // BUG-05 的教训：不能让未知异常直接把 500 抛给前端，要兜底成业务错误码
+
         log.error("系统异常", e);
         return Result.error(500, "服务器开小差了，请稍后再试");
     }

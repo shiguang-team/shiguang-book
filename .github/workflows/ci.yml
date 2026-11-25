@@ -18,6 +18,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
-      - name: Run JUnit 5 Unit Tests (AuthServiceTest & BookServiceTest)
+      - name: Run JUnit 5 Unit Tests
         working-directory: ./backend
         run: mvn test -B

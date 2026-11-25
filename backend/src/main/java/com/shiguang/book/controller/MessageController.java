@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -47,5 +49,19 @@ public class MessageController {
     @GetMapping("/received")
     public Result<List<Message>> received(HttpServletRequest request) {
         return Result.ok(messageService.received(CurrentUser.get(request)));
+    }
+
+    /** 未读留言数 */
+    @GetMapping("/unread-count")
+    public Result<Map<String, Long>> unreadCount(HttpServletRequest request) {
+        long count = messageService.unreadCount(CurrentUser.get(request));
+        return Result.ok(Map.of("unreadCount", count));
+    }
+
+    /** 将收到的留言全部标为已读 */
+    @PutMapping("/read-all")
+    public Result<Void> readAll(HttpServletRequest request) {
+        messageService.markAllRead(CurrentUser.get(request));
+        return Result.ok();
     }
 }

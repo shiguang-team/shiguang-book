@@ -6,12 +6,23 @@
         <span v-else>{{ book.title.slice(0, 2) }}</span>
       </div>
       <div class="info">
-        <h2>
-          {{ book.title }}
-          <el-tag v-if="book.status === 0" type="info" size="small">已下架</el-tag>
-        </h2>
+        <div class="title-row">
+          <h2>
+            {{ book.title }}
+            <el-tag v-if="book.status === 0" type="info" size="small">已下架</el-tag>
+          </h2>
+          <el-button
+            :type="isFav ? 'warning' : 'default'"
+            :plain="!isFav"
+            size="small"
+            :loading="favLoading"
+            @click="toggleFavorite"
+          >
+            {{ isFav ? '已收藏' : '加入收藏' }}
+          </el-button>
+        </div>
         <div class="price">¥{{ book.price }}</div>
-        <el-descriptions :column="2" border size="small">
+        <el-descriptions :column="isMobile ? 1 : 2" border size="small">
           <el-descriptions-item label="分类">{{ book.category }}</el-descriptions-item>
           <el-descriptions-item label="成色">{{ book.conditionLevel }} 成新</el-descriptions-item>
           <el-descriptions-item label="卖家">{{ book.sellerNickname }}</el-descriptions-item>
@@ -29,7 +40,7 @@
       v-if="book && book.status === 0"
       type="info"
       :closable="false"
-      title="该书籍已下架，无法新增留言"
+      :title="book.offShelfReason ? `该书籍已下架（原因：${book.offShelfReason}），无法新增留言` : '该书籍已下架，无法新增留言'"
       show-icon
     />
 
@@ -48,24 +59,63 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '../api'
+import { addFavorite, removeFavorite, checkFavorite } from '../api/favorite'
 
 const route = useRoute()
+const router = useRouter()
 const book = ref(null)
 const messages = ref([])
 const content = ref('')
+const isFav = ref(false)
+const favLoading = ref(false)
+const isMobile = ref(window.innerWidth <= 640)
+
+function handleResize() {
+  isMobile.value = window.innerWidth <= 640
+}
 
 async function load() {
-  book.value = await request.get(`/books/${route.params.id}`)
-  messages.value = await request.get('/messages', { params: { bookId: route.params.id } })
+  const id = route.params.id
+  book.value = await request.get(`/books/${id}`)
+  messages.value = await request.get('/messages', { params: { bookId: id } })
+  if (localStorage.getItem('token')) {
+    isFav.value = !!(await checkFavorite(id))
+  } else {
+    isFav.value = false
+  }
+}
+
+async function toggleFavorite() {
+  if (!localStorage.getItem('token')) {
+    ElMessage.warning('请先登录后再收藏')
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  favLoading.value = true
+  try {
+    const id = route.params.id
+    if (isFav.value) {
+      await removeFavorite(id)
+      isFav.value = false
+      ElMessage.success('已取消收藏')
+    } else {
+      await addFavorite(id)
+      isFav.value = true
+      ElMessage.success('已加入收藏')
+    }
+  } finally {
+    favLoading.value = false
+  }
 }
 
 async function send() {
   if (!localStorage.getItem('token')) {
     ElMessage.warning('请先登录')
+    router.push({ path: '/login', query: { redirect: route.fullPath } })
     return
   }
   await request.post('/messages', { bookId: Number(route.params.id), content: content.value })
@@ -73,7 +123,14 @@ async function send() {
   await load()
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style scoped>
@@ -105,8 +162,15 @@ onMounted(load)
 .info {
   flex: 1;
 }
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
 .info h2 {
-  margin: 0 0 8px;
+  margin: 0;
 }
 .price {
   color: #c0392b;
@@ -146,5 +210,14 @@ onMounted(load)
   display: flex;
   gap: 10px;
   margin-top: 14px;
+}
+@media (max-width: 640px) {
+  .head {
+    flex-direction: column;
+  }
+  .cover {
+    width: 100%;
+    height: 180px;
+  }
 }
 </style>
